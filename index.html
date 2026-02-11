@@ -245,8 +245,20 @@
         <div class="results">
             <div class="result-title">📊 예상 LTV</div>
             <div class="result-item">
+                <span class="result-label">1일 LTV (유저당)</span>
+                <span class="result-value" id="ltv1">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">3일 LTV (유저당)</span>
+                <span class="result-value" id="ltv3">$0.00</span>
+            </div>
+            <div class="result-item">
                 <span class="result-label">7일 LTV (유저당)</span>
                 <span class="result-value" id="ltv7">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">14일 LTV (유저당)</span>
+                <span class="result-value" id="ltv14">$0.00</span>
             </div>
             <div class="result-item">
                 <span class="result-label">30일 LTV (유저당)</span>
@@ -421,11 +433,17 @@
             }
 
             // LTV 계산
+            const ltv1 = calculateLTV(1, arpu, d1, d7, d30);
+            const ltv3 = calculateLTV(3, arpu, d1, d7, d30);
             const ltv7 = calculateLTV(7, arpu, d1, d7, d30);
+            const ltv14 = calculateLTV(14, arpu, d1, d7, d30);
             const ltv30 = calculateLTV(30, arpu, d1, d7, d30);
 
             // 결과 표시
+            document.getElementById('ltv1').textContent = `$${ltv1.toFixed(2)}`;
+            document.getElementById('ltv3').textContent = `$${ltv3.toFixed(2)}`;
             document.getElementById('ltv7').textContent = `$${ltv7.toFixed(2)}`;
+            document.getElementById('ltv14').textContent = `$${ltv14.toFixed(2)}`;
             document.getElementById('ltv30').textContent = `$${ltv30.toFixed(2)}`;
 
             // 차트 업데이트
