@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모바일 게임 LTV 계산기</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 650px;
+            width: 100%;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(134, 239, 172, 0.1);
+            border: 1px solid rgba(134, 239, 172, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #86efac;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(134, 239, 172, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(134, 239, 172, 0.25);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #86efac;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.15);
+        }
+
+        .unit {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 16px;
+            border: 1px solid rgba(134, 239, 172, 0.2);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: #86efac;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(134, 239, 172, 0.1) 0%, rgba(110, 231, 183, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(134, 239, 172, 0.25);
+        }
+
+        .result-title {
+            text-align: center;
+            color: #86efac;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(134, 239, 172, 0.1);
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .result-value {
+            color: #86efac;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(134, 239, 172, 0.2);
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(110, 231, 183, 0.08);
+            border-radius: 12px;
+            border-left: 3px solid #6ee7b7;
+        }
+
+        .info-box p {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .result-value {
+                font-size: 18px;
+            }
+        }
+
+        /* Remove number input arrows */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 모바일 게임 LTV 계산기</h1>
+        <p class="subtitle">리텐션 기반 간이 계산</p>
+
+        <div class="input-group">
+            <label for="dau">DAU (일일 활성 유저)</label>
+            <div class="input-wrapper">
+                <input type="number" id="dau" value="10000" min="0" step="100">
+                <span class="unit">명</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="arpu">ARPU (유저당 평균 매출)</label>
+            <div class="input-wrapper">
+                <input type="number" id="arpu" value="0.5" min="0" step="0.01">
+                <span class="unit">$</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="d1">D1 리텐션</label>
+            <div class="input-wrapper">
+                <input type="number" id="d1" value="40" min="0" max="100" step="0.1">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="d7">D7 리텐션</label>
+            <div class="input-wrapper">
+                <input type="number" id="d7" value="15" min="0" max="100" step="0.1">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="d30">D30 리텐션</label>
+            <div class="input-wrapper">
+                <input type="number" id="d30" value="5" min="0" max="100" step="0.1">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">📈 리텐션 커브</div>
+            <canvas id="retentionChart"></canvas>
+        </div>
+
+        <div class="results">
+            <div class="result-title">📊 예상 LTV</div>
+            <div class="result-item">
+                <span class="result-label">7일 LTV (유저당)</span>
+                <span class="result-value" id="ltv7">$0.00</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">30일 LTV (유저당)</span>
+                <span class="result-value" id="ltv30">$0.00</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <p>
+                💡 <strong>계산 방식:</strong> 리텐션 커브를 선형 보간하여 각 날짜의 활성 유저 비율을 추정하고,
+                일별 ARPU를 적분하여 LTV를 계산합니다. 실제 LTV는 유저 행동 패턴에 따라 달라질 수 있습니다.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 차트 인스턴스 전역 변수
+        let retentionChart = null;
+
+        // 리텐션 값을 선형 보간하는 함수
+        function interpolateRetention(day, d1, d7, d30) {
+            if (day === 0) return 100;
+            if (day === 1) return d1;
+            if (day === 7) return d7;
+            if (day === 30) return d30;
+
+            // 구간별 선형 보간
+            if (day < 1) {
+                return 100 + (d1 - 100) * day;
+            } else if (day < 7) {
+                return d1 + (d7 - d1) * (day - 1) / 6;
+            } else if (day < 30) {
+                return d7 + (d30 - d7) * (day - 7) / 23;
+            } else {
+                // 30일 이후는 지수 감쇠 가정
+                const decayRate = 0.98;
+                return d30 * Math.pow(decayRate, day - 30);
+            }
+        }
+
+        // LTV 계산 함수 (리텐션 커브 적분 방식)
+        function calculateLTV(days, arpu, d1, d7, d30) {
+            let ltv = 0;
+
+            // Day 0부터 시작 (첫날 = 100% 리텐션)
+            for (let day = 0; day <= days; day++) {
+                const retention = interpolateRetention(day, d1, d7, d30) / 100;
+                ltv += retention * arpu;
+            }
+
+            return ltv;
+        }
+
+        // 차트 업데이트 함수
+        function updateChart(d1, d7, d30) {
+            const days = [];
+            const retentionData = [];
+
+            // 0일부터 30일까지 리텐션 데이터 생성
+            for (let day = 0; day <= 30; day++) {
+                days.push(`D${day}`);
+                retentionData.push(interpolateRetention(day, d1, d7, d30));
+            }
+
+            if (retentionChart) {
+                // 기존 차트 업데이트
+                retentionChart.data.labels = days;
+                retentionChart.data.datasets[0].data = retentionData;
+                retentionChart.update('none'); // 애니메이션 없이 업데이트
+            } else {
+                // 차트 초기화
+                const ctx = document.getElementById('retentionChart').getContext('2d');
+                retentionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: days,
+                        datasets: [{
+                            label: '리텐션 (%)',
+                            data: retentionData,
+                            borderColor: '#86efac',
+                            backgroundColor: 'rgba(134, 239, 172, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#86efac',
+                            pointBorderColor: '#0f172a',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#6ee7b7',
+                            pointHoverBorderColor: '#86efac',
+                            pointHoverBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleColor: '#86efac',
+                                bodyColor: '#e2e8f0',
+                                borderColor: '#86efac',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `리텐션: ${context.parsed.y.toFixed(2)}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(134, 239, 172, 0.1)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    callback: function(value, index) {
+                                        // 0, 1, 7, 14, 21, 30일만 표시
+                                        if ([0, 1, 7, 14, 21, 30].includes(index)) {
+                                            return this.getLabelForValue(value);
+                                        }
+                                        return '';
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: 'rgba(134, 239, 172, 0.1)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+        }
+
+        // 결과 업데이트 함수
+        function updateResults() {
+            const dau = parseFloat(document.getElementById('dau').value) || 0;
+            const arpu = parseFloat(document.getElementById('arpu').value) || 0;
+            const d1 = parseFloat(document.getElementById('d1').value) || 0;
+            const d7 = parseFloat(document.getElementById('d7').value) || 0;
+            const d30 = parseFloat(document.getElementById('d30').value) || 0;
+
+            // 입력값 검증
+            if (d1 < 0 || d7 < 0 || d30 < 0 || d1 > 100 || d7 > 100 || d30 > 100) {
+                return;
+            }
+
+            // LTV 계산
+            const ltv7 = calculateLTV(7, arpu, d1, d7, d30);
+            const ltv30 = calculateLTV(30, arpu, d1, d7, d30);
+
+            // 결과 표시
+            document.getElementById('ltv7').textContent = `$${ltv7.toFixed(2)}`;
+            document.getElementById('ltv30').textContent = `$${ltv30.toFixed(2)}`;
+
+            // 차트 업데이트
+            updateChart(d1, d7, d30);
+        }
+
+        // 모든 입력 필드에 이벤트 리스너 추가
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', updateResults);
+        });
+
+        // 초기 계산 실행
+        updateResults();
+    </script>
+</body>
+</html>
