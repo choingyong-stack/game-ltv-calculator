@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -237,6 +238,14 @@
             </div>
         </div>
 
+        <div class="input-group">
+            <label for="cpi">CPI (설치 당 단가)</label>
+            <div class="input-wrapper">
+                <input type="number" id="cpi" value="2.5" min="0" step="0.01">
+                <span class="unit">$</span>
+            </div>
+        </div>
+
         <div class="chart-container">
             <div class="chart-title">📈 리텐션 커브</div>
             <canvas id="retentionChart"></canvas>
@@ -266,10 +275,36 @@
             </div>
         </div>
 
+        <div class="results">
+            <div class="result-title">💰 ROAS (광고비 대비 수익률)</div>
+            <div class="result-item">
+                <span class="result-label">1일 ROAS</span>
+                <span class="result-value" id="roas1">0.00x</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">3일 ROAS</span>
+                <span class="result-value" id="roas3">0.00x</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">7일 ROAS</span>
+                <span class="result-value" id="roas7">0.00x</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">14일 ROAS</span>
+                <span class="result-value" id="roas14">0.00x</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">30일 ROAS</span>
+                <span class="result-value" id="roas30">0.00x</span>
+            </div>
+        </div>
+
         <div class="info-box">
             <p>
                 💡 <strong>계산 방식:</strong> 리텐션 커브를 선형 보간하여 각 날짜의 활성 유저 비율을 추정하고,
-                일별 ARPU를 적분하여 LTV를 계산합니다. 실제 LTV는 유저 행동 패턴에 따라 달라질 수 있습니다.
+                일별 ARPU를 적분하여 LTV를 계산합니다.<br>
+                <strong>ROAS (Return on Ad Spend):</strong> LTV를 CPI로 나눈 값으로, 유저 획득 비용 대비 수익률을 나타냅니다.
+                예를 들어 ROAS 1.0x는 손익분기점, 1.5x는 50% 수익을 의미합니다.
             </p>
         </div>
     </div>
@@ -426,6 +461,7 @@
             const d1 = parseFloat(document.getElementById('d1').value) || 0;
             const d7 = parseFloat(document.getElementById('d7').value) || 0;
             const d30 = parseFloat(document.getElementById('d30').value) || 0;
+            const cpi = parseFloat(document.getElementById('cpi').value) || 0;
 
             // 입력값 검증
             if (d1 < 0 || d7 < 0 || d30 < 0 || d1 > 100 || d7 > 100 || d30 > 100) {
@@ -445,6 +481,27 @@
             document.getElementById('ltv7').textContent = `$${ltv7.toFixed(2)}`;
             document.getElementById('ltv14').textContent = `$${ltv14.toFixed(2)}`;
             document.getElementById('ltv30').textContent = `$${ltv30.toFixed(2)}`;
+
+            // ROAS 계산 및 표시
+            if (cpi > 0) {
+                const roas1 = ltv1 / cpi;
+                const roas3 = ltv3 / cpi;
+                const roas7 = ltv7 / cpi;
+                const roas14 = ltv14 / cpi;
+                const roas30 = ltv30 / cpi;
+
+                document.getElementById('roas1').textContent = `${roas1.toFixed(2)}x`;
+                document.getElementById('roas3').textContent = `${roas3.toFixed(2)}x`;
+                document.getElementById('roas7').textContent = `${roas7.toFixed(2)}x`;
+                document.getElementById('roas14').textContent = `${roas14.toFixed(2)}x`;
+                document.getElementById('roas30').textContent = `${roas30.toFixed(2)}x`;
+            } else {
+                document.getElementById('roas1').textContent = '0.00x';
+                document.getElementById('roas3').textContent = '0.00x';
+                document.getElementById('roas7').textContent = '0.00x';
+                document.getElementById('roas14').textContent = '0.00x';
+                document.getElementById('roas30').textContent = '0.00x';
+            }
 
             // 차트 업데이트
             updateChart(d1, d7, d30);
